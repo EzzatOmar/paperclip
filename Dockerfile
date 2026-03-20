@@ -1,6 +1,25 @@
 FROM node:lts-trixie-slim AS base
 RUN apt-get update \
-  && apt-get install -y --no-install-recommends ca-certificates curl git \
+  && apt-get install -y --no-install-recommends \
+    bash \
+    build-essential \
+    ca-certificates \
+    curl \
+    dnsutils \
+    ffmpeg \
+    file \
+    git \
+    iproute2 \
+    iputils-ping \
+    jq \
+    less \
+    netcat-openbsd \
+    procps \
+    rsync \
+    unzip \
+    vim \
+    wget \
+    zip \
   && rm -rf /var/lib/apt/lists/*
 RUN corepack enable
 
@@ -36,9 +55,15 @@ RUN test -f server/dist/index.js || (echo "ERROR: server build output missing" &
 FROM base AS production
 WORKDIR /app
 COPY --chown=node:node --from=build /app /app
-RUN npm install --global --omit=dev @anthropic-ai/claude-code@latest @openai/codex@latest opencode-ai \
-  && mkdir -p /paperclip \
-  && chown node:node /paperclip
+COPY --chown=node:node docker/paperclip-entrypoint.sh /app/docker/paperclip-entrypoint.sh
+COPY --chown=node:node docker/nextcloud-sync-loop.sh /app/docker/nextcloud-sync-loop.sh
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends nextcloud-desktop-cmd \
+  && rm -rf /var/lib/apt/lists/* \
+  && npm install --global --omit=dev @anthropic-ai/claude-code@latest @openai/codex@latest opencode-ai \
+  && mkdir -p /paperclip /nextcloud /nextcloud-state \
+  && chmod +x /app/docker/paperclip-entrypoint.sh /app/docker/nextcloud-sync-loop.sh \
+  && chown -R node:node /paperclip /nextcloud /nextcloud-state
 
 ENV NODE_ENV=production \
   HOME=/paperclip \
@@ -49,10 +74,16 @@ ENV NODE_ENV=production \
   PAPERCLIP_INSTANCE_ID=default \
   PAPERCLIP_CONFIG=/paperclip/instances/default/config.json \
   PAPERCLIP_DEPLOYMENT_MODE=authenticated \
-  PAPERCLIP_DEPLOYMENT_EXPOSURE=private
+  PAPERCLIP_DEPLOYMENT_EXPOSURE=private \
+  NEXTCLOUD_SYNC_DIR=/nextcloud \
+  NEXTCLOUD_STATE_DIR=/nextcloud-state \
+  NEXTCLOUD_NETRC_FILE=/nextcloud-state/.netrc \
+  NEXTCLOUD_SYNC_INTERVAL=300 \
+  NEXTCLOUD_TRUST_SELF_SIGNED=0
 
-VOLUME ["/paperclip"]
+VOLUME ["/paperclip", "/nextcloud", "/nextcloud-state"]
 EXPOSE 3100
 
 USER node
+ENTRYPOINT ["/app/docker/paperclip-entrypoint.sh"]
 CMD ["node", "--import", "./server/node_modules/tsx/dist/loader.mjs", "server/dist/index.js"]

@@ -2,33 +2,55 @@ services:
   db:
     image: postgres:17-alpine
     environment:
-      POSTGRES_USER: paperclip
-      POSTGRES_PASSWORD: paperclip
-      POSTGRES_DB: paperclip
+      POSTGRES_USER: "${POSTGRES_USER:-paperclip}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-paperclip}"
+      POSTGRES_DB: "${POSTGRES_DB:-paperclip}"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U paperclip -d paperclip"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-paperclip} -d ${POSTGRES_DB:-paperclip}"]
       interval: 2s
       timeout: 5s
       retries: 30
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
 
   server:
     build: .
     ports:
-      - "3100:3100"
+      - "${PAPERCLIP_PORT:-3100}:3100"
     environment:
-      DATABASE_URL: postgres://paperclip:paperclip@db:5432/paperclip
-      PORT: "3100"
-      SERVE_UI: "true"
-      PAPERCLIP_DEPLOYMENT_MODE: "authenticated"
-      PAPERCLIP_DEPLOYMENT_EXPOSURE: "private"
+      DATABASE_URL: "${DATABASE_URL:-postgres://${POSTGRES_USER:-paperclip}:${POSTGRES_PASSWORD:-paperclip}@${POSTGRES_HOST:-db}:${POSTGRES_PORT_INTERNAL:-5432}/${POSTGRES_DB:-paperclip}}"
+      PORT: "${PORT:-3100}"
+      HOST: "${HOST:-0.0.0.0}"
+      SERVE_UI: "${SERVE_UI:-true}"
+      PAPERCLIP_HOME: "${PAPERCLIP_HOME:-/paperclip}"
+      PAPERCLIP_INSTANCE_ID: "${PAPERCLIP_INSTANCE_ID:-default}"
+      PAPERCLIP_CONFIG: "${PAPERCLIP_CONFIG:-/paperclip/instances/default/config.json}"
+      PAPERCLIP_DEPLOYMENT_MODE: "${PAPERCLIP_DEPLOYMENT_MODE:-authenticated}"
+      PAPERCLIP_DEPLOYMENT_EXPOSURE: "${PAPERCLIP_DEPLOYMENT_EXPOSURE:-private}"
       PAPERCLIP_PUBLIC_URL: "${PAPERCLIP_PUBLIC_URL:-http://localhost:3100}"
+      PAPERCLIP_AUTH_PUBLIC_BASE_URL: "${PAPERCLIP_AUTH_PUBLIC_BASE_URL:-}"
+      PAPERCLIP_ALLOWED_HOSTNAMES: "${PAPERCLIP_ALLOWED_HOSTNAMES:-}"
+      PAPERCLIP_AUTH_DISABLE_SIGN_UP: "${PAPERCLIP_AUTH_DISABLE_SIGN_UP:-}"
+      BETTER_AUTH_URL: "${BETTER_AUTH_URL:-}"
+      BETTER_AUTH_BASE_URL: "${BETTER_AUTH_BASE_URL:-}"
+      BETTER_AUTH_TRUSTED_ORIGINS: "${BETTER_AUTH_TRUSTED_ORIGINS:-}"
       BETTER_AUTH_SECRET: "${BETTER_AUTH_SECRET:?BETTER_AUTH_SECRET must be set}"
+      NEXTCLOUD_ENABLED: "${NEXTCLOUD_ENABLED:-}"
+      NEXTCLOUD_URL: "${NEXTCLOUD_URL:-}"
+      NEXTCLOUD_USER: "${NEXTCLOUD_USER:-}"
+      NEXTCLOUD_PASSWORD: "${NEXTCLOUD_PASSWORD:-}"
+      NEXTCLOUD_SYNC_DIR: "${NEXTCLOUD_SYNC_DIR:-/nextcloud}"
+      NEXTCLOUD_STATE_DIR: "${NEXTCLOUD_STATE_DIR:-/nextcloud-state}"
+      NEXTCLOUD_NETRC_FILE: "${NEXTCLOUD_NETRC_FILE:-/nextcloud-state/.netrc}"
+      NEXTCLOUD_NETRC_MACHINE: "${NEXTCLOUD_NETRC_MACHINE:-}"
+      NEXTCLOUD_SYNC_INTERVAL: "${NEXTCLOUD_SYNC_INTERVAL:-300}"
+      NEXTCLOUD_TRUST_SELF_SIGNED: "${NEXTCLOUD_TRUST_SELF_SIGNED:-0}"
     volumes:
       - paperclip-data:/paperclip
+      - nextcloud-data:/nextcloud
+      - nextcloud-state:/nextcloud-state
     depends_on:
       db:
         condition: service_healthy
@@ -36,3 +58,5 @@ services:
 volumes:
   pgdata:
   paperclip-data:
+  nextcloud-data:
+  nextcloud-state:
