@@ -20,7 +20,7 @@ services:
     ports:
       - "${PAPERCLIP_PORT:-3100}:3100"
     environment:
-      DATABASE_URL: "${DATABASE_URL:-postgres://${POSTGRES_USER:-paperclip}:${POSTGRES_PASSWORD:-paperclip}@${POSTGRES_HOST:-db}:${POSTGRES_PORT_INTERNAL:-5432}/${POSTGRES_DB:-paperclip}}"
+      DATABASE_URL: "${DATABASE_URL:-postgres://paperclip:paperclip@db:5432/paperclip}"
       PORT: "${PORT:-3100}"
       HOST: "${HOST:-0.0.0.0}"
       SERVE_UI: "${SERVE_UI:-true}"
