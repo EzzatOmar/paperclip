@@ -16,6 +16,7 @@ services:
       - pgdata:/var/lib/postgresql/data
 
   server:
+    user: "0:0"
     build: .
     ports:
       - "${PAPERCLIP_PORT:-3100}:3100"
