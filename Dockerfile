@@ -58,12 +58,12 @@ COPY --chown=node:node --from=build /app /app
 COPY --chown=node:node docker/paperclip-entrypoint.sh /app/docker/paperclip-entrypoint.sh
 COPY --chown=node:node docker/nextcloud-sync-loop.sh /app/docker/nextcloud-sync-loop.sh
 RUN apt-get update \
-  && apt-get install -y --no-install-recommends nextcloud-desktop-cmd \
+  && apt-get install -y --no-install-recommends chromium nextcloud-desktop-cmd \
   && rm -rf /var/lib/apt/lists/* \
   && npm install --global --omit=dev @anthropic-ai/claude-code@latest @openai/codex@latest opencode-ai \
-  && mkdir -p /paperclip /nextcloud /nextcloud-state \
+  && mkdir -p /paperclip /nextcloud /nextcloud-state /chrome-data \
   && chmod +x /app/docker/paperclip-entrypoint.sh /app/docker/nextcloud-sync-loop.sh \
-  && chown -R node:node /paperclip /nextcloud /nextcloud-state
+  && chown -R node:node /paperclip /nextcloud /nextcloud-state /chrome-data
 
 ENV NODE_ENV=production \
   HOME=/paperclip \
@@ -75,13 +75,15 @@ ENV NODE_ENV=production \
   PAPERCLIP_CONFIG=/paperclip/instances/default/config.json \
   PAPERCLIP_DEPLOYMENT_MODE=authenticated \
   PAPERCLIP_DEPLOYMENT_EXPOSURE=private \
+  CHROME_BIN=/usr/bin/chromium \
+  CHROME_USER_DATA_DIR=/chrome-data \
   NEXTCLOUD_SYNC_DIR=/nextcloud \
   NEXTCLOUD_STATE_DIR=/nextcloud-state \
   NEXTCLOUD_NETRC_FILE=/nextcloud-state/.netrc \
   NEXTCLOUD_SYNC_INTERVAL=300 \
   NEXTCLOUD_TRUST_SELF_SIGNED=0
 
-VOLUME ["/paperclip", "/nextcloud", "/nextcloud-state"]
+VOLUME ["/paperclip", "/nextcloud", "/nextcloud-state", "/chrome-data"]
 EXPOSE 3100
 
 USER node

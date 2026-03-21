@@ -52,6 +52,7 @@ services:
       - paperclip-data:/paperclip
       - nextcloud-data:/nextcloud
       - nextcloud-state:/nextcloud-state
+      - chrome-data:/chrome-data
     depends_on:
       db:
         condition: service_healthy
@@ -61,3 +62,4 @@ volumes:
   paperclip-data:
   nextcloud-data:
   nextcloud-state:
+  chrome-data:
