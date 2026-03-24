@@ -143,3 +143,11 @@ A change is done when all are true:
 2. Typecheck, tests, and build pass
 3. Contracts are synced across db/shared/server/ui
 4. Docs updated when behavior or commands change
+
+# IMPORTANT!!!
+This is a fork which we selfhost and run on coolify.
+
+We run the docker-compose.yml file in coolify.
+
+When you are tasked to merge back updates from upstream you have to keep our changes.
+If unclear because we have conflicts ask user what to do.
